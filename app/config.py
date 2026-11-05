@@ -18,12 +18,21 @@ def _database_uri() -> str:
 
     Hosting providers (Render, Heroku, ...) often hand out ``postgres://`` or
     ``postgresql://`` URLs. SQLAlchemy needs an explicit driver, and the project
-    ships with psycopg 3 in ``requirements-prod.txt``.
+    ships with psycopg 3.
+
+    Vercel's Postgres/Neon integration may expose the connection string as
+    ``POSTGRES_URL`` instead of ``DATABASE_URL``, so those names are accepted
+    as fallbacks.
     """
-    url = os.environ.get(
-        "DATABASE_URL",
-        f"sqlite:///{(INSTANCE_DIR / 'bloodlink.db').as_posix()}",
-    )
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        url = (
+            os.environ.get("POSTGRES_URL")
+            or os.environ.get("POSTGRES_PRISMA_URL")
+            or os.environ.get("POSTGRES_URL_NON_POOLING")
+        )
+    if not url:
+        url = f"sqlite:///{(INSTANCE_DIR / 'bloodlink.db').as_posix()}"
     for prefix in ("postgres://", "postgresql://"):
         if url.startswith(prefix):
             return "postgresql+psycopg://" + url[len(prefix):]

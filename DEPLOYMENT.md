@@ -11,7 +11,7 @@ There are three practical options:
 | **A. Cloudflare Tunnel** | 5 minutes | Only while your PC + server run | Demo to friends right now |
 | **B. Render (free)** | 20–30 minutes | Yes, even when your PC is off | A real, permanent link |
 | **C. Google Cloud Run** | 30–60 minutes | Yes | "Host on Google", needs billing |
-| **D. Vercel** | 10 minutes | Yes | You already use Vercel; **requires PostgreSQL** |
+| **D. Vercel** | 10 minutes | Yes | You already use Vercel; PostgreSQL recommended |
 
 The repo now includes everything these hosts need:
 
@@ -19,7 +19,7 @@ The repo now includes everything these hosts need:
 - `Dockerfile` — production image (Cloud Run / any Docker host)
 - `render.yaml` — Render Blueprint
 - `Procfile` — Heroku-style start command
-- `vercel.json` + `api/index.py` — Vercel serverless entry point
+- `index.py` + `public/static/` — Vercel serverless entry point and CDN assets
 
 ---
 
@@ -206,17 +206,15 @@ Then sign in again.
 
 ---
 
-## Option D — Vercel (serverless, PostgreSQL required)
+## Option D — Vercel (serverless)
 
-Vercel cannot run Flask from the repository root and cannot write SQLite files.
-The repository includes the required glue:
+Vercel's zero-configuration Flask support detects the `app` instance in the
+repository's root `index.py` and turns it into a single Vercel Function. The
+repository includes everything needed:
 
-- `api/index.py` — WSGI entry point; creates the schema on cold start
-- `vercel.json` — rewrites every route to the function
+- `index.py` — Flask entry point; creates the schema on cold start
+- `public/static/**` — CSS/JS served directly from Vercel's CDN
 - `psycopg[binary]` in `requirements.txt`
-
-**A PostgreSQL database is mandatory.** Use Neon (free): create a project and
-copy the `postgresql://...` connection string.
 
 ### 1. Import the project
 
@@ -226,18 +224,28 @@ copy the `postgresql://...` connection string.
 4. Output Directory: leave empty.
 5. Install Command: `pip install -r requirements.txt`.
 
-### 2. Environment variables
+### 2. Database (recommended) and environment variables
 
-Add these before deploying (or in Project → Settings → Environment Variables):
+For permanent data, create a free PostgreSQL database. The easiest option is
+Vercel's own storage: **Project → Storage → Create Database → Postgres** (this
+is Neon underneath). It adds `POSTGRES_URL` automatically, which the app
+accepts. Alternatively create a project at <https://neon.tech> and copy its
+`postgresql://...` string.
+
+Add these in **Project → Settings → Environment Variables** (Production):
 
 | Key | Value |
 |---|---|
-| `DATABASE_URL` | Neon `postgresql://...` string |
+| `DATABASE_URL` | Neon/Vercel `postgresql://...` string (or rely on `POSTGRES_URL`) |
 | `SECRET_KEY` | long random string |
 | `FLASK_ENV` | `production` |
 
-Click **Deploy**. Vercel gives a URL like
-`https://blood-bank-project.vercel.app`.
+Then open **Deployments → … → Redeploy** so the variables take effect.
+
+> Without a PostgreSQL URL the app still starts, but it falls back to SQLite in
+> `/tmp`. That is enough to demo the UI, however accounts and requests reset
+> whenever Vercel recycles the function instance. Add PostgreSQL before sharing
+> the link with real users.
 
 ### 3. Create the admin
 
@@ -252,7 +260,7 @@ UPDATE users SET role = 'admin', email_verified = true WHERE email = 'you@exampl
 
 - Functions are short-lived; `Flask-Limiter` counters are per instance.
 - Every cold start runs `db.create_all()`, which is idempotent.
-- SQLite is not usable; data only persists in PostgreSQL.
+- SQLite in `/tmp` is ephemeral; data only persists in PostgreSQL.
 - The free Hobby plan is for demos, not production traffic.
 
 ---
