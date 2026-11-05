@@ -11,6 +11,7 @@ There are three practical options:
 | **A. Cloudflare Tunnel** | 5 minutes | Only while your PC + server run | Demo to friends right now |
 | **B. Render (free)** | 20–30 minutes | Yes, even when your PC is off | A real, permanent link |
 | **C. Google Cloud Run** | 30–60 minutes | Yes | "Host on Google", needs billing |
+| **D. Vercel** | 10 minutes | Yes | You already use Vercel; **requires PostgreSQL** |
 
 The repo now includes everything these hosts need:
 
@@ -18,6 +19,7 @@ The repo now includes everything these hosts need:
 - `Dockerfile` — production image (Cloud Run / any Docker host)
 - `render.yaml` — Render Blueprint
 - `Procfile` — Heroku-style start command
+- `vercel.json` + `api/index.py` — Vercel serverless entry point
 
 ---
 
@@ -204,6 +206,57 @@ Then sign in again.
 
 ---
 
+## Option D — Vercel (serverless, PostgreSQL required)
+
+Vercel cannot run Flask from the repository root and cannot write SQLite files.
+The repository includes the required glue:
+
+- `api/index.py` — WSGI entry point; creates the schema on cold start
+- `vercel.json` — rewrites every route to the function
+- `psycopg[binary]` in `requirements.txt`
+
+**A PostgreSQL database is mandatory.** Use Neon (free): create a project and
+copy the `postgresql://...` connection string.
+
+### 1. Import the project
+
+1. <https://vercel.com/new> → import `manoj18-pixel/Blood-bank-project`.
+2. Framework Preset: **Other**.
+3. Build Command: leave empty.
+4. Output Directory: leave empty.
+5. Install Command: `pip install -r requirements.txt`.
+
+### 2. Environment variables
+
+Add these before deploying (or in Project → Settings → Environment Variables):
+
+| Key | Value |
+|---|---|
+| `DATABASE_URL` | Neon `postgresql://...` string |
+| `SECRET_KEY` | long random string |
+| `FLASK_ENV` | `production` |
+
+Click **Deploy**. Vercel gives a URL like
+`https://blood-bank-project.vercel.app`.
+
+### 3. Create the admin
+
+Vercel has no shell. Register a normal account on the site, then promote it in
+the Neon SQL editor:
+
+```sql
+UPDATE users SET role = 'admin', email_verified = true WHERE email = 'you@example.com';
+```
+
+### Vercel limits to know
+
+- Functions are short-lived; `Flask-Limiter` counters are per instance.
+- Every cold start runs `db.create_all()`, which is idempotent.
+- SQLite is not usable; data only persists in PostgreSQL.
+- The free Hobby plan is for demos, not production traffic.
+
+---
+
 ## Before you share the link (important)
 
 | Check | Why |
@@ -252,3 +305,4 @@ Demo accounts from `seed.py` are for local testing only. Do **not** run
 - **Just show a friend today** → Option A (Cloudflare Tunnel).
 - **A real link for a college project / portfolio** → Option B (Render + Neon).
 - **You specifically need Google** → Option C (Cloud Run + Neon).
+- **You already deployed on Vercel** → Option D, and make sure `DATABASE_URL` is set.

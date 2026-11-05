@@ -126,9 +126,11 @@ See [`DEPLOYMENT.md`](DEPLOYMENT.md) for three ready-to-use options:
 - **Cloudflare Tunnel** — a temporary public link in about 5 minutes.
 - **Render** — free permanent hosting with a GitHub repo and PostgreSQL.
 - **Google Cloud Run** — deploy the included `Dockerfile` if you need Google hosting.
+- **Vercel** — serverless deployment (requires PostgreSQL; `vercel.json` and `api/index.py` are included).
 
 The repository ships with `requirements-prod.txt`, `Dockerfile`, `.dockerignore`,
-`Procfile` and `render.yaml`. Production runs through Gunicorn, and
+`Procfile`, `render.yaml`, `vercel.json` and `api/index.py`. Production runs
+through Gunicorn (Render/Cloud Run) or a Vercel Python function, and
 `DATABASE_URL` is normalised to the psycopg 3 driver automatically.
 
 ---
@@ -166,6 +168,8 @@ The repository ships with `requirements-prod.txt`, `Dockerfile`, `.dockerignore`
 ├── Dockerfile                 # Production image (Cloud Run / Docker)
 ├── render.yaml                # Render Blueprint
 ├── Procfile                   # Heroku-style web process
+├── vercel.json                # Vercel routing
+├── api/index.py               # Vercel serverless entry point
 ├── DEPLOYMENT.md              # Hosting and public-link guide
 ├── PROJECT_PLAN.md            # Full architecture, schema, routes and test plan
 ├── .env.example

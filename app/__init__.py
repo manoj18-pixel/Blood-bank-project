@@ -20,7 +20,12 @@ def create_app(config_name: str | None = None) -> Flask:
     if config_name is None:
         config_name = os.environ.get("FLASK_ENV", "development")
     app.config.from_object(config_by_name.get(config_name, DevelopmentConfig))
-    Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+    try:
+        Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+    except OSError:
+        # Serverless platforms (e.g. Vercel) mount the bundle read-only. A
+        # PostgreSQL DATABASE_URL should be used there instead of SQLite.
+        pass
 
     db.init_app(app)
     login_manager.init_app(app)

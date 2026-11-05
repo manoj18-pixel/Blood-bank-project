@@ -2,4 +2,3 @@
 # Windows does not need these for local development.
 -r requirements.txt
 gunicorn>=21,<24
-psycopg[binary]>=3.1,<4.0
