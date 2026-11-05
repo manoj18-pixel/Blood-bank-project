@@ -18,6 +18,7 @@ Notes for this deployment target:
 
 import logging
 import os
+import tempfile
 
 
 def _prepare_database_url() -> None:
@@ -29,11 +30,14 @@ def _prepare_database_url() -> None:
         return
 
     if os.environ.get("VERCEL"):
-        # The deployed bundle is read-only; /tmp is the only writable directory.
-        os.environ["DATABASE_URL"] = "sqlite:////tmp/bloodlink.db"
+        # The deployed bundle is read-only; the OS temp directory (/tmp) is the
+        # only writable location.
+        db_path = os.path.join(tempfile.gettempdir(), "bloodlink.db")
+        os.environ["DATABASE_URL"] = "sqlite:///" + db_path.replace("\\", "/")
         logging.getLogger(__name__).warning(
-            "No PostgreSQL URL found. Using ephemeral SQLite in /tmp. "
-            "Add DATABASE_URL in Vercel project settings for persistent data."
+            "No PostgreSQL URL found. Using ephemeral SQLite at %s. "
+            "Add DATABASE_URL in Vercel project settings for persistent data.",
+            db_path,
         )
 
 
