@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Page not found{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="empty" style="margin-top:3rem">
+    <div class="empty-icon" aria-hidden="true">🩸</div>
+    <h1>404 · Page not found</h1>
+    <p>The page you are looking for may have moved, expired, or never existed.</p>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('main.index') }}">Go to safety</a>
+  </div>
+</div>
+{% endblock %}

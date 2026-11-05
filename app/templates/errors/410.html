@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Request expired{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="empty" style="margin-top:3rem">
+    <div class="empty-icon" aria-hidden="true">⏳</div>
+    <h1>410 · This request has expired</h1>
+    <p>The needed-by time has passed and the request is closed to new offers.</p>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('requests.index') }}">Browse open requests</a>
+  </div>
+</div>
+{% endblock %}

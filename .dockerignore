@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+.git/
+.gitignore
+.env
+instance/
+tests/
+*.db
+*.sqlite
+.DS_Store
+Thumbs.db

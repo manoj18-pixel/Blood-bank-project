@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import field, check %}
+
+{% block title %}My profile{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Account settings</span>
+      <h1>My profile</h1>
+      <p class="muted mb-0">Keep your blood group, city and availability current so the right people can find you.</p>
+    </div>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('main.my_donations') }}">Donation history</a>
+  </div>
+
+  <div class="split">
+    <div class="split-main stack">
+      <form class="card card-pad" method="post" action="{{ url_for('profile.index') }}" novalidate>
+        {{ profile_form.hidden_tag() }}
+        <h2>Personal details</h2>
+        <div class="form-grid">
+          {{ field(profile_form.full_name) }}
+          {{ field(profile_form.phone, "Only shared after you accept an offer.") }}
+          {{ field(profile_form.blood_group) }}
+          {{ field(profile_form.date_of_birth, "Used only to check donor age eligibility.") }}
+          {{ field(profile_form.gender) }}
+          {{ field(profile_form.city) }}
+          {{ field(profile_form.area) }}
+          {{ field(profile_form.pincode) }}
+          {{ field(profile_form.last_donation_date, "Leave blank if you have never donated.") }}
+        </div>
+
+        <div class="divider"></div>
+        <h2>Donor settings</h2>
+        {{ check(profile_form.is_donor, "Appear in donor search results and receive requests.") }}
+        {{ check(profile_form.is_available, "Turn this off while you are travelling or temporarily unable to donate.") }}
+
+        {% if not eligible %}
+          <div class="callout callout-warning">
+            <strong>Current eligibility:</strong> {{ reason|replace("_", " ")|title }}.
+            {% if eligible_from %}You can donate again from {{ eligible_from|d }} ({{ cooldown_days_left }} days).{% endif %}
+          </div>
+        {% endif %}
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">{{ profile_form.submit.label.text }}</button>
+        </div>
+      </form>
+
+      <form class="card card-pad" method="post" action="{{ url_for('profile.change_password') }}" novalidate>
+        {{ password_form.hidden_tag() }}
+        <h2>Change password</h2>
+        <p class="muted small">Use at least 8 characters with a letter and a number.</p>
+        <div class="form-grid">
+          {{ field(password_form.current_password) }}
+          {{ field(password_form.new_password) }}
+          <div class="full">{{ field(password_form.confirm_password) }}</div>
+        </div>
+        <button class="btn btn-outline" type="submit">{{ password_form.submit.label.text }}</button>
+      </form>
+    </div>
+
+    <aside class="split-side stack">
+      <div class="card card-accent">
+        <div class="card-body">
+          <div class="flex-between mb-2">
+            <span class="avatar avatar-lg">{{ current_user.initials }}</span>
+            <span class="blood-pill blood-pill-lg">{{ current_user.blood_group }}</span>
+          </div>
+          <h3 class="mb-0">{{ current_user.full_name }}</h3>
+          <p class="muted small">{{ current_user.email }}</p>
+          <div class="chip-row">
+            <span class="badge badge-{{ 'green' if current_user.is_available else 'amber' }}">{{ "Available" if current_user.is_available else "Unavailable" }}</span>
+            <span class="badge badge-slate">{{ "Donor" if current_user.is_donor else "Requester" }}</span>
+            <span class="badge badge-{{ 'green' if current_user.email_verified else 'amber' }}">{{ "Verified" if current_user.email_verified else "Unverified" }}</span>
+          </div>
+          <div class="info-list mt-3">
+            <div class="info-row"><dt>City</dt><dd>{{ current_user.city }}</dd></div>
+            <div class="info-row"><dt>Donations</dt><dd>{{ current_user.donation_count }}</dd></div>
+            <div class="info-row"><dt>Member since</dt><dd>{{ current_user.created_at|d("%b %Y") }}</dd></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <h3>Contact privacy</h3>
+          <p class="muted small">Your phone number is stored securely and displayed only:</p>
+          <ul class="small muted" style="padding-left:1.1rem;margin:0;display:grid;gap:.4rem">
+            <li>to a requester whose offer you accepted,</li>
+            <li>to you on your own profile and donor page,</li>
+            <li>to administrators for moderation only.</li>
+          </ul>
+          <div class="contact-hidden mt-2">{{ current_user.masked_phone }}</div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>90-day cooldown.</strong> After a recorded donation, your availability switches off automatically until the cooldown ends.
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

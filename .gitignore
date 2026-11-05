@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+instance/
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+migrations/versions/*.pyc
+*.sqlite
+*.db
+.DS_Store
+Thumbs.db

@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import status_badge, urgency_badge, field %}
+
+{% block title %}Request for {{ blood_request.patient_name }}{% endblock %}
+
+{% block content %}
+<section class="detail-head">
+  <div class="container">
+    <div class="detail-title">
+      <span class="blood-pill blood-pill-lg">{{ blood_request.blood_group }}</span>
+      <div>
+        <div class="detail-tags">
+          {{ status_badge(blood_request.status) }}
+          {{ urgency_badge(blood_request.urgency) }}
+          <span class="badge badge-slate">{{ blood_request.units_needed }} unit{{ 's' if blood_request.units_needed != 1 }} needed</span>
+          {% if is_owner %}<span class="badge badge-amber">Your request</span>{% endif %}
+        </div>
+        <h1>Blood needed for {{ blood_request.patient_name }}</h1>
+        <p class="muted mb-0">
+          {{ blood_request.hospital_name }}, {{ blood_request.city }}
+          · needed by {{ blood_request.needed_by|dt("%d %b %Y, %I:%M %p") }}
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div class="split">
+    <div class="split-main stack">
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Request details</h2>
+          {% if is_owner %}
+            <div class="btn-row">
+              {% if blood_request.status == "open" %}
+                <a class="btn btn-outline btn-sm" href="{{ url_for('requests.edit', request_id=blood_request.id) }}">Edit</a>
+              {% endif %}
+              {% if blood_request.status in ["open", "matched"] %}
+                <form method="post" action="{{ url_for('requests.cancel', request_id=blood_request.id) }}" data-confirm="Cancel this request? Donors who offered will be notified.">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-ghost btn-sm" type="submit">Cancel request</button>
+                </form>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="info-list">
+            <div class="info-row"><dt>Patient</dt><dd>{{ blood_request.patient_name }}{% if blood_request.patient_age %} · {{ blood_request.patient_age }} years{% endif %}</dd></div>
+            <div class="info-row"><dt>Blood group</dt><dd><span class="blood-pill">{{ blood_request.blood_group }}</span></dd></div>
+            <div class="info-row"><dt>Units needed</dt><dd>{{ blood_request.units_needed }}</dd></div>
+            <div class="info-row"><dt>Hospital</dt><dd>{{ blood_request.hospital_name }}</dd></div>
+            <div class="info-row"><dt>Address</dt><dd>{{ blood_request.address }}</dd></div>
+            <div class="info-row"><dt>City / pincode</dt><dd>{{ blood_request.city }}{% if blood_request.pincode %} · {{ blood_request.pincode }}{% endif %}</dd></div>
+            <div class="info-row"><dt>Needed by</dt><dd>{{ blood_request.needed_by|dt }}</dd></div>
+            <div class="info-row"><dt>Posted</dt><dd>{{ blood_request.created_at|timeago }}</dd></div>
+          </div>
+
+          {% if is_owner or requester_contact %}
+            <div class="contact-reveal">
+              <div class="label">Contact number</div>
+              <div class="value">{{ blood_request.contact_phone }}</div>
+              <div class="small">{{ "Your request contact number." if is_owner else "The requester's number, shared because they accepted your offer." }}</div>
+            </div>
+          {% else %}
+            <div class="contact-hidden">
+              🔒 The requester's phone number is shown to a donor only after their offer is accepted.
+            </div>
+          {% endif %}
+
+          {% if blood_request.notes %}
+            <div class="callout mt-3">
+              <strong>Notes:</strong> {{ blood_request.notes }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if is_owner %}
+        <div class="card">
+          <div class="card-head">
+            <h2>Donor offers ({{ blood_request.responses|length }})</h2>
+            <span class="muted small">Contact is revealed after you accept an offer.</span>
+          </div>
+          <div class="card-body">
+            {% if blood_request.responses %}
+              {% for offer in blood_request.responses %}
+                <div class="offer">
+                  <div class="offer-head">
+                    <div class="offer-person">
+                      <span class="avatar">{{ offer.donor.initials }}</span>
+                      <div>
+                        <div class="donor-name">{{ offer.donor.full_name }}</div>
+                        <div class="muted small">{{ offer.donor.blood_group }} · {{ offer.donor.city }}{% if offer.donor.area %} · {{ offer.donor.area }}{% endif %}</div>
+                      </div>
+                    </div>
+                    <div class="btn-row">
+                      <span class="badge badge-{{ offer.status }}">{{ offer.status|title }}</span>
+                      <span class="tiny muted">{{ offer.created_at|timeago }}</span>
+                    </div>
+                  </div>
+
+                  {% if offer.message %}
+                    <div class="offer-body">"{{ offer.message }}"</div>
+                  {% endif %}
+
+                  <div class="offer-body">
+                    {% if offer.status in ["accepted", "donated"] %}
+                      <div class="contact-reveal" style="margin-top:.5rem">
+                        <div class="label">Donor contact</div>
+                        <div class="value">{{ offer.donor.phone }}</div>
+                      </div>
+                    {% else %}
+                      <span class="muted">Phone: {{ offer.donor.masked_phone }} (hidden until accepted)</span>
+                    {% endif %}
+                  </div>
+
+                  <div class="offer-actions">
+                    {% if offer.status == "offered" and blood_request.status == "open" %}
+                      <form method="post" action="{{ url_for('offers.accept', offer_id=offer.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-primary btn-sm" type="submit">Accept offer</button>
+                      </form>
+                      <form method="post" action="{{ url_for('offers.decline', offer_id=offer.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-outline btn-sm" type="submit">Decline</button>
+                      </form>
+                    {% endif %}
+                    <a class="btn btn-ghost btn-sm" href="{{ url_for('donors.show', donor_id=offer.donor.id) }}">View donor profile</a>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <p class="muted small mb-0">No offers yet. Compatible donors can see this request and offer to help. We will notify you when someone does.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if matching %}
+          <div class="card">
+            <div class="card-head">
+              <h2>Compatible donors near the hospital</h2>
+              <span class="muted small">{{ matching|length }} ranked by compatibility, availability and distance</span>
+            </div>
+            <div class="card-body">
+              <div class="donor-grid">
+                {% for item in matching %}
+                  {% set donor = item.donor %}
+                  <div class="donor-card">
+                    <span class="avatar">{{ donor.initials }}</span>
+                    <div class="donor-main">
+                      <div class="donor-top">
+                        <div>
+                          <div class="donor-name">{{ donor.full_name }}</div>
+                          <div class="donor-meta">
+                            {{ donor.city }}{% if item.distance_km is not none %} · {{ item.distance_km }} km away{% endif %}
+                          </div>
+                        </div>
+                        <span class="blood-pill">{{ donor.blood_group }}</span>
+                      </div>
+                      <div class="donor-tags">
+                        {% if item.eligible %}
+                          <span class="badge badge-green">Eligible now</span>
+                        {% else %}
+                          <span class="badge badge-amber">{{ item.eligibility_reason|replace("_", " ")|title }}</span>
+                        {% endif %}
+                        <span class="badge badge-slate">{{ donor.masked_phone }}</span>
+                      </div>
+                      <div class="donor-foot">
+                        <span>{{ donor.masked_phone }}</span>
+                        <a class="btn btn-outline btn-sm" href="{{ url_for('donors.show', donor_id=donor.id) }}">Profile</a>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if blood_request.status == "matched" %}
+          <div class="card" id="fulfill">
+            <div class="card-head"><h2>Record the donation</h2></div>
+            <div class="card-body">
+              <p class="muted small">Once the donation happens, record it here. This fulfils the request and starts the donor's 90-day cooldown.</p>
+              <form method="post" action="{{ url_for('requests.fulfill', request_id=blood_request.id) }}" novalidate>
+                {{ fulfill_form.hidden_tag() }}
+                <div class="form-grid">
+                  {{ field(fulfill_form.donated_on) }}
+                  {{ field(fulfill_form.units) }}
+                  <div class="full">{{ field(fulfill_form.notes, "Optional") }}</div>
+                </div>
+                <button class="btn btn-primary" type="submit">{{ fulfill_form.submit.label.text }}</button>
+              </form>
+            </div>
+          </div>
+        {% endif %}
+      {% else %}
+        {% if my_offer %}
+          <div class="card">
+            <div class="card-head">
+              <h2>Your offer</h2>
+              <span class="badge badge-{{ my_offer.status }}">{{ my_offer.status|title }}</span>
+            </div>
+            <div class="card-body">
+              {% if my_offer.message %}<p class="muted">"{{ my_offer.message }}"</p>{% endif %}
+              {% if my_offer.status == "offered" %}
+                <p class="muted small">Waiting for the requester to respond. You can withdraw your offer anytime before it is accepted.</p>
+                <form method="post" action="{{ url_for('offers.withdraw', offer_id=my_offer.id) }}" data-confirm="Withdraw your offer?">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-outline btn-sm" type="submit">Withdraw offer</button>
+                </form>
+              {% elif my_offer.status == "accepted" %}
+                <p class="text-green"><strong>Your offer was accepted.</strong> Contact the requester to arrange the donation.</p>
+              {% elif my_offer.status == "declined" %}
+                <p class="muted small mb-0">This offer was declined. Thank you for stepping up — there are other requests that may need you.</p>
+              {% endif %}
+            </div>
+          </div>
+        {% elif can_offer %}
+          <div class="card card-accent">
+            <div class="card-head"><h2>I can help</h2></div>
+            <div class="card-body">
+              <p class="muted small">Your blood group ({{ current_user.blood_group }}) is compatible with this request and you are eligible to donate. Send an offer with an optional message.</p>
+              <form method="post" action="{{ url_for('offers.create_offer', request_id=blood_request.id) }}" novalidate>
+                {{ offer_form.hidden_tag() }}
+                {{ field(offer_form.message, "Optional. Share when you can reach the hospital.") }}
+                <button class="btn btn-primary" type="submit">{{ offer_form.submit.label.text }}</button>
+              </form>
+            </div>
+          </div>
+        {% elif blood_request.status == "open" %}
+          <div class="callout callout-warning">
+            {% if not current_user.is_donor %}
+              <strong>You are not in donor mode.</strong> Enable "I want to donate blood" in your profile to offer help.
+              <div class="mt-2"><a class="btn btn-outline btn-sm" href="{{ url_for('profile.index') }}">Open profile</a></div>
+            {% elif not eligible_now %}
+              <strong>You cannot donate right now:</strong> {{ eligibility_label }}.
+              {% if current_user.eligible_from %}<div class="small">You will be eligible again on {{ current_user.eligible_from|d }}.</div>{% endif %}
+            {% elif current_user.blood_group not in blood_request.compatible_donor_groups %}
+              <strong>Your blood group ({{ current_user.blood_group }}) is not compatible</strong> with this request. Compatible groups are {{ blood_request.compatible_donor_groups|join(", ") }}.
+            {% else %}
+              You cannot offer on this request at the moment.
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <aside class="split-side stack">
+      <div class="card">
+        <div class="card-body">
+          <h3>Request status</h3>
+          <p>{{ status_badge(blood_request.status) }}</p>
+          <div class="info-list">
+            <div class="info-row"><dt>Needed by</dt><dd>{{ blood_request.needed_by|dt("%d %b, %I:%M %p") }}</dd></div>
+            <div class="info-row"><dt>Offers</dt><dd>{{ blood_request.responses|length }}</dd></div>
+            <div class="info-row"><dt>Units</dt><dd>{{ blood_request.units_needed }}</dd></div>
+            <div class="info-row"><dt>Urgency</dt><dd>{{ blood_request.urgency|title }}</dd></div>
+            <div class="info-row"><dt>Posted by</dt><dd>{{ blood_request.requester.full_name }}</dd></div>
+          </div>
+        </div>
+      </div>
+
+      {% if is_owner and accepted_donor %}
+        <div class="card card-accent">
+          <div class="card-body">
+            <h3>Accepted donor</h3>
+            <div class="offer-person mb-2">
+              <span class="avatar">{{ accepted_donor.initials }}</span>
+              <div>
+                <div class="donor-name">{{ accepted_donor.full_name }}</div>
+                <div class="muted small">{{ accepted_donor.blood_group }} · {{ accepted_donor.city }}</div>
+              </div>
+            </div>
+            <div class="contact-reveal">
+              <div class="label">Phone</div>
+              <div class="value">{{ accepted_donor.phone }}</div>
+            </div>
+            <a class="btn btn-outline btn-sm mt-2" href="{{ url_for('donors.show', donor_id=accepted_donor.id) }}">View profile</a>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if requester_contact %}
+        <div class="card card-accent">
+          <div class="card-body">
+            <h3>Requester contact</h3>
+            <div class="offer-person mb-2">
+              <span class="avatar">{{ requester_contact.initials }}</span>
+              <div>
+                <div class="donor-name">{{ requester_contact.full_name }}</div>
+                <div class="muted small">{{ requester_contact.city }}</div>
+              </div>
+            </div>
+            <div class="contact-reveal">
+              <div class="label">Phone</div>
+              <div class="value">{{ requester_contact.phone }}</div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="privacy-note">
+        <span class="icon" aria-hidden="true">🔒</span>
+        <span>Only the request owner and the accepted donor can see each other's phone number.</span>
+      </div>
+
+      <div class="callout">
+        <strong>Stay safe.</strong> Meet at the hospital, confirm the requirement with hospital staff, and never pay for blood.
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

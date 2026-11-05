@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import field, check %}
+
+{% block title %}{{ "Edit request" if mode == "edit" else "Post a blood request" }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">{{ "Update request" if mode == "edit" else "New request" }}</span>
+      <h1>{{ "Edit blood request" if mode == "edit" else "Post a blood request" }}</h1>
+      <p class="muted mb-0">Compatible donors will be matched automatically by blood group, city and availability.</p>
+    </div>
+    {% if mode == "edit" %}
+      <a class="btn btn-outline btn-sm" href="{{ url_for('requests.detail', request_id=blood_request.id) }}">Back to request</a>
+    {% else %}
+      <a class="btn btn-outline btn-sm" href="{{ url_for('requests.index') }}">Back to requests</a>
+    {% endif %}
+  </div>
+
+  <div class="split">
+    <div class="split-main">
+      <form class="card card-pad" method="post" novalidate>
+        {{ form.hidden_tag() }}
+        <h2>Patient &amp; blood need</h2>
+        <div class="form-grid">
+          {{ field(form.patient_name) }}
+          {{ field(form.patient_age, "Optional") }}
+          {{ field(form.blood_group) }}
+          {{ field(form.units_needed) }}
+          {{ field(form.urgency) }}
+          {{ field(form.needed_by, "Local date and time the blood is needed by.") }}
+        </div>
+
+        <div class="divider"></div>
+        <h2>Hospital &amp; location</h2>
+        <div class="form-grid">
+          <div class="full">{{ field(form.hospital_name) }}</div>
+          <div class="full">{{ field(form.address) }}</div>
+          {{ field(form.city) }}
+          {{ field(form.pincode) }}
+        </div>
+
+        <div class="divider"></div>
+        <h2>Contact &amp; notes</h2>
+        {{ field(form.contact_phone, "Shared with a donor only after you accept their offer.") }}
+        {{ field(form.notes, "Ward number, landmark, or any instructions for the donor. Do not include sensitive medical details.") }}
+
+        {{ check(form.accept_terms, "BloodLink only matches donors and requesters. It does not provide medical advice, screen blood, or guarantee availability.") }}
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">{{ form.submit.label.text }}</button>
+          <a class="btn btn-ghost" href="{{ url_for('requests.index') }}">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+    <aside class="split-side stack">
+      <div class="card card-accent">
+        <div class="card-body">
+          <h3>Tips for a good request</h3>
+          <ul class="small muted" style="padding-left:1.1rem;margin:0;display:grid;gap:.55rem">
+            <li>Use the patient's real name so donors know who they are helping.</li>
+            <li>Add the hospital ward or landmark in the notes.</li>
+            <li>Keep your phone reachable once you accept an offer.</li>
+            <li>Mark the request fulfilled after the donation so the donor's cooldown starts.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>In an emergency</strong>, contact the nearest hospital or licensed blood bank immediately. BloodLink is a community aid, not an emergency service.
+      </div>
+
+      <div class="privacy-note">
+        <span class="icon" aria-hidden="true">🔒</span>
+        <span>Your contact number is hidden from donors until you accept an offer. Donor numbers stay hidden until then too.</span>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

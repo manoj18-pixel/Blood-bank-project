@@ -1,0 +1,39 @@
+{# Reusable form controls #}
+{% macro field(f, hint=None) %}
+  <div class="field{% if f.errors %} field-invalid{% endif %}">
+    {{ f.label(class="field-label") }}
+    {{ f(class="input", aria_invalid="true" if f.errors else "false") }}
+    {% if hint %}<p class="field-hint">{{ hint }}</p>{% endif %}
+    {% for error in f.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro check(f, hint=None) %}
+  <div class="field-check{% if f.errors %} field-invalid{% endif %}">
+    <label class="checkbox">
+      {{ f() }}
+      <span>{{ f.label.text }}</span>
+    </label>
+    {% if hint %}<p class="field-hint">{{ hint }}</p>{% endif %}
+    {% for error in f.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro empty_state(title, body, action_url=None, action_label=None) %}
+  <div class="empty">
+    <div class="empty-icon" aria-hidden="true">🩸</div>
+    <h3>{{ title }}</h3>
+    <p>{{ body }}</p>
+    {% if action_url %}<a class="btn btn-primary btn-sm" href="{{ action_url }}">{{ action_label }}</a>{% endif %}
+  </div>
+{% endmacro %}
+
+{% macro urgency_badge(level) %}
+  <span class="badge badge-{{ 'critical' if level == 'critical' else ('urgent' if level == 'urgent' else 'slate') }}">
+    {{ level|title }}
+  </span>
+{% endmacro %}
+
+{% macro status_badge(status) %}
+  <span class="badge badge-{{ status }}">{{ status|title }}</span>
+{% endmacro %}

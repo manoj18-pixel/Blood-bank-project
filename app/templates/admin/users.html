@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Manage users{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Administrator</span>
+      <h1>Users</h1>
+      <p class="muted mb-0">{{ pagination.total }} account{{ 's' if pagination.total != 1 }} registered.</p>
+    </div>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('admin.index') }}">Back to overview</a>
+  </div>
+
+  <form class="filter-bar" method="get">
+    <div class="filter-grid" style="grid-template-columns:minmax(0,2fr) auto">
+      <div class="field">
+        <label class="field-label" for="q">Search by name, email or city</label>
+        <input class="input" id="q" name="q" value="{{ search }}" placeholder="e.g. Asha or Pune">
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" type="submit">Search</button>
+        <a class="btn btn-ghost" href="{{ url_for('admin.users') }}">Reset</a>
+      </div>
+    </div>
+  </form>
+
+  <div class="card">
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr><th>User</th><th>Group</th><th>City</th><th>Donor</th><th>Status</th><th>Verified</th><th class="text-right">Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for user in pagination.items %}
+            <tr>
+              <td>
+                <strong>{{ user.full_name }}</strong>
+                {% if user.is_admin %}<span class="badge badge-red">Admin</span>{% endif %}
+                <div class="muted small">{{ user.email }}</div>
+              </td>
+              <td><span class="blood-pill">{{ user.blood_group }}</span></td>
+              <td>{{ user.city }}</td>
+              <td>{{ "Yes" if user.is_donor else "No" }}</td>
+              <td><span class="badge badge-{{ 'green' if user.status == 'active' else 'amber' }}">{{ user.status|title }}</span></td>
+              <td><span class="badge badge-{{ 'green' if user.email_verified else 'slate' }}">{{ "Yes" if user.email_verified else "No" }}</span></td>
+              <td class="text-right">
+                <div class="btn-row" style="justify-content:flex-end">
+                  {% if not user.email_verified %}
+                    <form method="post" action="{{ url_for('admin.verify_user', user_id=user.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button class="btn btn-outline btn-sm" type="submit">Verify</button>
+                    </form>
+                  {% endif %}
+                  {% if user.id != current_user.id %}
+                    <form method="post" action="{{ url_for('admin.suspend_user', user_id=user.id) }}" data-confirm="{{ 'Reactivate' if user.status == 'suspended' else 'Suspend' }} {{ user.full_name }}?">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button class="btn {{ 'btn-primary' if user.status == 'suspended' else 'btn-ghost' }} btn-sm" type="submit">{{ "Reactivate" if user.status == "suspended" else "Suspend" }}</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if pagination.pages > 1 %}
+    <nav class="pager" aria-label="User pages">
+      {% if pagination.has_prev %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('admin.users', page=pagination.prev_num, q=search) }}">&larr; Previous</a>
+      {% endif %}
+      <span class="pager-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      {% if pagination.has_next %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('admin.users', page=pagination.next_num, q=search) }}">Next &rarr;</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}

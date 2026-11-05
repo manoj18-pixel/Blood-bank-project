@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Find donors{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Donor directory</span>
+      <h1>Find compatible donors</h1>
+      <p class="muted mb-0">Search by the blood group needed. We only show donors whose group is compatible with the patient.</p>
+    </div>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('requests.new') }}">Post a request</a>
+  </div>
+
+  <form class="filter-bar" method="get" data-auto-submit>
+    <div class="filter-grid">
+      <div class="field">
+        <label class="field-label" for="group">Blood group needed</label>
+        <select class="input" id="group" name="group">
+          <option value="">Any blood group</option>
+          {% for group in BLOOD_GROUPS %}
+            <option value="{{ group }}" {{ 'selected' if group == recipient_group }}>{{ group }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="city">City</label>
+        <input class="input" id="city" name="city" value="{{ city }}" placeholder="e.g. Pune" autocomplete="address-level2">
+      </div>
+      <div class="field">
+        <label class="field-label" for="include_unavailable">Availability</label>
+        <label class="checkbox" style="padding-top:.55rem">
+          <input type="checkbox" id="include_unavailable" name="include_unavailable" value="1" {{ 'checked' if include_unavailable }}>
+          <span>Include donors in cooldown</span>
+        </label>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" type="submit">Search</button>
+        <a class="btn btn-ghost" href="{{ url_for('donors.index') }}">Reset</a>
+      </div>
+    </div>
+  </form>
+
+  <div class="filter-summary">
+    <span>
+      {% if recipient_group %}
+        Showing compatible donors for <strong>{{ recipient_group }}</strong>{% if compatible_groups %} ({{ compatible_groups|join(", ") }}){% endif %}
+      {% else %}
+        Showing all available donors
+      {% endif %}
+      · {{ pagination.total }} result{{ 's' if pagination.total != 1 }}
+    </span>
+    {% if recipient_group %}
+      <span class="chip-row">
+        {% for group in compatible_groups %}<span class="chip">{{ group }}</span>{% endfor %}
+      </span>
+    {% endif %}
+  </div>
+
+  {% if rows %}
+    <div class="donor-grid">
+      {% for row in rows %}
+        {% set donor = row.donor %}
+        <div class="donor-card">
+          <span class="avatar">{{ donor.initials }}</span>
+          <div class="donor-main">
+            <div class="donor-top">
+              <div>
+                <div class="donor-name">{{ donor.full_name }}</div>
+                <div class="donor-meta">{{ donor.city }}{% if donor.area %} · {{ donor.area }}{% endif %}</div>
+              </div>
+              <span class="blood-pill">{{ donor.blood_group }}</span>
+            </div>
+            <div class="donor-tags">
+              {% if row.eligible %}
+                <span class="badge badge-green">Available now</span>
+              {% else %}
+                <span class="badge badge-amber">{{ row.reason_label }}</span>
+              {% endif %}
+              <span class="badge badge-slate">{{ donor.donation_count }} donation{{ 's' if donor.donation_count != 1 }}</span>
+              {% if donor.email_verified %}<span class="badge badge-slate">Verified</span>{% endif %}
+            </div>
+            <div class="donor-foot">
+              <span>{{ donor.masked_phone }} · joined {{ donor.created_at|d("%b %Y") }}</span>
+              <a class="btn btn-outline btn-sm" href="{{ url_for('donors.show', donor_id=donor.id) }}">View profile</a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">
+      <div class="empty-icon" aria-hidden="true">🔎</div>
+      <h3>No donors matched this search</h3>
+      <p>Try a nearby city, a different compatible blood group, or include donors who are currently in their donation cooldown.</p>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('donors.index') }}">Clear filters</a>
+    </div>
+  {% endif %}
+
+  {% if pagination.pages > 1 %}
+    <nav class="pager" aria-label="Donor search pages">
+      {% if pagination.has_prev %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('donors.index', page=pagination.prev_num, group=recipient_group, city=city, include_unavailable='1' if include_unavailable else None) }}">&larr; Previous</a>
+      {% endif %}
+      <span class="pager-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      {% if pagination.has_next %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('donors.index', page=pagination.next_num, group=recipient_group, city=city, include_unavailable='1' if include_unavailable else None) }}">Next &rarr;</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}

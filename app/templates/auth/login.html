@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import field, check %}
+
+{% block title %}Sign in{% endblock %}
+
+{% block content %}
+<div class="container auth-wrap">
+  <div class="auth-aside">
+    <span class="eyebrow">Welcome back</span>
+    <h1>Every minute counts. Let's find a match.</h1>
+    <p class="muted">Sign in to manage your requests, respond to people who need your blood group, and keep your availability up to date.</p>
+    <div class="callout mt-3">
+      <strong>Privacy first.</strong> Contact details are exchanged only after both sides agree through an offer.
+    </div>
+    <ul class="auth-points">
+      <li><span class="tick">✓</span><span>Ranked compatible donors near the hospital.</span></li>
+      <li><span class="tick">✓</span><span>90-day donation cooldown tracked automatically.</span></li>
+      <li><span class="tick">✓</span><span>Notifications for every offer and acceptance.</span></li>
+    </ul>
+  </div>
+
+  <div class="card auth-card">
+    <h2>Sign in</h2>
+    <p class="muted small">New here? <a href="{{ url_for('auth.register') }}">Create an account</a>.</p>
+
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {% if request.args.get('next') %}
+        <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+      {% endif %}
+      {{ field(form.email) }}
+      {{ field(form.password) }}
+      {{ check(form.remember) }}
+      <div class="flex-between mb-2">
+        <a class="small" href="{{ url_for('auth.forgot_password') }}">Forgot password?</a>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit">{{ form.submit.label.text }}</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

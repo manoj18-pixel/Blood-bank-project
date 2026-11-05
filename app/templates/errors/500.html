@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Something went wrong{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="empty" style="margin-top:3rem">
+    <div class="empty-icon" aria-hidden="true">⚠️</div>
+    <h1>500 · Something went wrong</h1>
+    <p>We could not complete that request. Please try again. If the problem continues, contact support.</p>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('main.index') }}">Back home</a>
+  </div>
+</div>
+{% endblock %}

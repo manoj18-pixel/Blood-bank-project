@@ -1,0 +1,18 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# After pushing this repository to GitHub, open Render > New > Blueprint and
+# point it at the repo. Add DATABASE_URL from a Postgres add-on (or Neon) before
+# the first deploy if you want data to survive restarts.
+services:
+  - type: web
+    name: bloodlink
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-prod.txt
+    startCommand: flask --app run:app init-db && gunicorn "run:app" --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.12.7

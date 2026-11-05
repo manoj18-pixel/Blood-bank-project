@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import status_badge, urgency_badge, empty_state %}
+
+{% block title %}Blood requests{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Community requests</span>
+      <h1>Blood requests</h1>
+      <p class="muted mb-0">Browse open requests near you. If your blood group is compatible and you are eligible, you can offer to help.</p>
+    </div>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('requests.new') }}">+ Post a request</a>
+  </div>
+
+  <form class="filter-bar" method="get" data-auto-submit>
+    <div class="filter-grid">
+      <div class="field">
+        <label class="field-label" for="status">Status</label>
+        <select class="input" id="status" name="status">
+          <option value="open" {{ 'selected' if status == 'open' }}>Open</option>
+          <option value="matched" {{ 'selected' if status == 'matched' }}>Matched</option>
+          <option value="fulfilled" {{ 'selected' if status == 'fulfilled' }}>Fulfilled</option>
+          <option value="expired" {{ 'selected' if status == 'expired' }}>Expired</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="group">Blood group</label>
+        <select class="input" id="group" name="group">
+          <option value="">Any group</option>
+          {% for group in BLOOD_GROUPS %}
+            <option value="{{ group }}" {{ 'selected' if group == blood_group }}>{{ group }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="city">City</label>
+        <input class="input" id="city" name="city" value="{{ city }}" placeholder="e.g. Pune">
+      </div>
+      <div class="field">
+        <label class="field-label" for="urgency">Urgency</label>
+        <select class="input" id="urgency" name="urgency">
+          <option value="">Any urgency</option>
+          <option value="critical" {{ 'selected' if urgency == 'critical' }}>Critical</option>
+          <option value="urgent" {{ 'selected' if urgency == 'urgent' }}>Urgent</option>
+          <option value="normal" {{ 'selected' if urgency == 'normal' }}>Normal</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label" for="mine">Compatibility</label>
+        <label class="checkbox" style="padding-top:.55rem">
+          <input type="checkbox" id="mine" name="mine" value="1" {{ 'checked' if mine }}>
+          <span>Compatible with my group</span>
+        </label>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" type="submit">Filter</button>
+        <a class="btn btn-ghost" href="{{ url_for('requests.index') }}">Reset</a>
+      </div>
+    </div>
+  </form>
+
+  <div class="filter-summary">
+    <span>{{ pagination.total }} request{{ 's' if pagination.total != 1 }} found</span>
+    {% if mine and current_user.is_donor %}
+      <span class="chip-row"><span class="chip">Your group: {{ current_user.blood_group }}</span></span>
+    {% endif %}
+  </div>
+
+  {% if pagination.items %}
+    <div class="request-list">
+      {% for r in pagination.items %}
+        <a class="request-card" href="{{ url_for('requests.detail', request_id=r.id) }}">
+          <span class="blood-pill">{{ r.blood_group }}</span>
+          <div class="request-main">
+            <div class="request-title">Blood needed for {{ r.patient_name }}</div>
+            <div class="request-meta">
+              <span>{{ r.hospital_name }}</span>
+              <span>{{ r.city }}</span>
+              <span>Needed by {{ r.needed_by|dt("%d %b, %I:%M %p") }}</span>
+            </div>
+            <div class="request-tags">
+              {{ status_badge(r.status) }}
+              {{ urgency_badge(r.urgency) }}
+              <span class="badge badge-slate">{{ r.units_needed }} unit{{ 's' if r.units_needed != 1 }}</span>
+              {% if r.requester_id == current_user.id %}
+                <span class="badge badge-amber">Your request</span>
+              {% elif current_user.is_donor and current_user.blood_group in r.compatible_donor_groups %}
+                <span class="badge badge-green">Compatible with you</span>
+              {% endif %}
+              {% if r.id in offered_ids %}<span class="badge badge-matched">You offered</span>{% endif %}
+            </div>
+          </div>
+          <div class="request-side">
+            <span class="countdown" data-needed-by="{{ r.needed_by.isoformat() }}">Needed soon</span>
+            <span class="btn btn-outline btn-sm">View request</span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    {{ empty_state("No requests found", "Try clearing the filters or widening the city. New requests appear here as soon as they are posted.", url_for('requests.index'), "Clear filters") }}
+  {% endif %}
+
+  {% if pagination.pages > 1 %}
+    <nav class="pager" aria-label="Request pages">
+      {% if pagination.has_prev %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('requests.index', page=pagination.prev_num, status=status, group=blood_group, city=city, urgency=urgency, mine='1' if mine else None) }}">&larr; Previous</a>
+      {% endif %}
+      <span class="pager-info">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+      {% if pagination.has_next %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('requests.index', page=pagination.next_num, status=status, group=blood_group, city=city, urgency=urgency, mine='1' if mine else None) }}">Next &rarr;</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}

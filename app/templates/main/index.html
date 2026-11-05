@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import urgency_badge %}
+
+{% block title %}Find a blood donor near you{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow">Community blood network</span>
+        <h1>Find a matching blood donor, <em>right when it matters.</em></h1>
+        <p class="hero-lead">BloodLink connects people who need blood with nearby compatible donors. Post a request, see who can help, and connect only after the donor accepts. No middlemen, no payments.</p>
+        <div class="btn-row hero-cta">
+          <a class="btn btn-primary" href="{{ url_for('requests.new') if current_user.is_authenticated else url_for('auth.register') }}">I need blood</a>
+          <a class="btn btn-outline" href="{{ url_for('donors.index') if current_user.is_authenticated else url_for('auth.register') }}">I want to donate</a>
+        </div>
+        <div class="trust-row">
+          <span><span class="dot"></span> Phone numbers stay private</span>
+          <span><span class="dot"></span> 90-day donation cooldown</span>
+          <span><span class="dot"></span> Free community service</span>
+        </div>
+      </div>
+
+      <form class="quick-card" method="get" action="{{ url_for('donors.index') }}">
+        <span class="eyebrow">Quick match</span>
+        <h2>Who needs blood?</h2>
+        <p class="muted small">Select the blood group needed and the hospital city. We show compatible, eligible donors.</p>
+        <div class="field">
+          <label class="field-label" for="hero-group">Blood group needed</label>
+          <select class="input" id="hero-group" name="group">
+            <option value="">Any blood group</option>
+            {% for group in BLOOD_GROUPS %}<option value="{{ group }}">{{ group }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label" for="hero-city">City</label>
+          <input class="input" id="hero-city" name="city" placeholder="e.g. Pune" autocomplete="address-level2">
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">Find compatible donors</button>
+        <div class="quick-note">
+          <span aria-hidden="true">🔒</span>
+          <span>Donor phone numbers are shared only after they accept a request. You must be signed in to view donor profiles.</span>
+        </div>
+      </form>
+    </div>
+
+    <div class="stat-band" aria-label="Platform statistics">
+      <div class="stat">
+        <div class="stat-value">{{ stats.donors }}</div>
+        <div class="stat-label">Registered donors</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">{{ stats.open_requests }}</div>
+        <div class="stat-label">Open requests</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">{{ stats.donations }}</div>
+        <div class="stat-label">Donations recorded</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">{{ stats.fulfilled }}</div>
+        <div class="stat-label">Requests fulfilled</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>How BloodLink works</h2>
+      <span class="muted small">Three steps from urgent need to a confirmed helper.</span>
+    </div>
+    <div class="grid-3">
+      <div class="card card-pad">
+        <span class="badge badge-red">Step 1</span>
+        <h3 class="mt-2">Post the need</h3>
+        <p class="muted small mb-0">Share the patient's blood group, hospital, city and how soon it is needed. Your phone number stays tucked away.</p>
+      </div>
+      <div class="card card-pad">
+        <span class="badge badge-amber">Step 2</span>
+        <h3 class="mt-2">Get matched</h3>
+        <p class="muted small mb-0">We rank compatible, available and nearby donors. Donors can offer to help directly on the request.</p>
+      </div>
+      <div class="card card-pad">
+        <span class="badge badge-green">Step 3</span>
+        <h3 class="mt-2">Connect safely</h3>
+        <p class="muted small mb-0">Accept one offer to reveal contact details to each other. After the donation, record it and start the cooldown.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if recent_requests %}
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Requests that need help</h2>
+      <a class="small" href="{{ url_for('requests.index') }}">View all requests &rarr;</a>
+    </div>
+    <div class="request-list">
+      {% for r in recent_requests %}
+        <a class="request-card" href="{{ url_for('requests.detail', request_id=r.id) }}">
+          <span class="blood-pill">{{ r.blood_group }}</span>
+          <div class="request-main">
+            <div class="request-title">Blood needed for {{ r.patient_name }}</div>
+            <div class="request-meta">
+              <span>{{ r.hospital_name }}</span>
+              <span>{{ r.city }}</span>
+              <span>Needed by {{ r.needed_by|dt("%d %b, %I:%M %p") }}</span>
+            </div>
+            <div class="request-tags">
+              {{ urgency_badge(r.urgency) }}
+              <span class="badge badge-slate">{{ r.units_needed }} unit{{ 's' if r.units_needed != 1 }}</span>
+            </div>
+          </div>
+          <div class="request-side">
+            <span class="countdown" data-needed-by="{{ r.needed_by.isoformat() }}">Needed soon</span>
+            <span class="btn btn-outline btn-sm">View</span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <div class="container">
+    <div class="callout">
+      <strong>Important:</strong> BloodLink is a community matching platform, not a hospital or blood bank. We do not test, store, transport, or sell blood. Eligibility shown here is informational only. In an emergency, contact the nearest hospital immediately.
+    </div>
+  </div>
+</section>
+{% endblock %}

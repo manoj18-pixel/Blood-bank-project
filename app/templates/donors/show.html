@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}{{ donor.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Donor profile</span>
+      <h1>{{ donor.full_name }}</h1>
+      <p class="muted mb-0">{{ donor.city }}{% if donor.area %} · {{ donor.area }}{% endif %} · Member since {{ donor.created_at|d("%B %Y") }}</p>
+    </div>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('donors.index') }}">Back to search</a>
+  </div>
+
+  <div class="split">
+    <div class="split-main stack">
+      <div class="card card-accent">
+        <div class="card-body">
+          <div class="flex-between">
+            <div style="display:flex;gap:1rem;align-items:center">
+              <span class="avatar avatar-lg">{{ donor.initials }}</span>
+              <div>
+                <h2 class="mb-0">{{ donor.full_name }}</h2>
+                <p class="muted mb-0">{{ donor.donation_count }} donation{{ 's' if donor.donation_count != 1 }} through BloodLink</p>
+              </div>
+            </div>
+            <span class="blood-pill blood-pill-lg">{{ donor.blood_group }}</span>
+          </div>
+
+          <div class="grid-3 mt-3">
+            <div class="stat">
+              <div class="stat-value">{{ donor.blood_group }}</div>
+              <div class="stat-label">Blood group</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">{{ donor.donation_count }}</div>
+              <div class="stat-label">Donations</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">{{ donor.created_at|d("%Y") }}</div>
+              <div class="stat-label">Member since</div>
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <h3>Can donate to</h3>
+            <div class="chip-row">
+              {% for group in can_give_to %}<span class="chip">{{ group }}</span>{% endfor %}
+            </div>
+            <p class="field-hint mt-1">Compatibility is based on red blood cell groups. The hospital performs the final cross-match.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Contact &amp; privacy</h2></div>
+        <div class="card-body">
+          {% if is_self %}
+            <div class="contact-reveal">
+              <div class="label">Your registered number</div>
+              <div class="value">{{ donor.phone }}</div>
+            </div>
+            <p class="field-hint">This is what a requester sees after you accept their offer. Update it from your profile.</p>
+            <a class="btn btn-outline btn-sm" href="{{ url_for('profile.index') }}">Edit profile</a>
+          {% else %}
+            <div class="contact-hidden">
+              <strong>{{ donor.masked_phone }}</strong><br>
+              Full contact details are revealed only after this donor accepts an offer on your request.
+            </div>
+            <p class="field-hint mt-2">BloodLink never publishes phone numbers. Post a request and let compatible donors come to you.</p>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('requests.new') }}">Post a request</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <aside class="split-side stack">
+      <div class="card">
+        <div class="card-body">
+          <h3>Availability</h3>
+          <p>
+            {% if eligible %}
+              <span class="badge badge-green">Available now</span>
+            {% else %}
+              <span class="badge badge-amber">{{ reason_label }}</span>
+            {% endif %}
+          </p>
+          <div class="info-list">
+            <div class="info-row"><dt>City</dt><dd>{{ donor.city }}</dd></div>
+            <div class="info-row"><dt>Area</dt><dd>{{ donor.area or "Not shared" }}</dd></div>
+            <div class="info-row"><dt>Last donation</dt><dd>{{ donor.last_donation_date|d if donor.last_donation_date else "Not recorded" }}</dd></div>
+            {% if donor.eligible_from %}
+              <div class="info-row"><dt>Eligible from</dt><dd>{{ donor.eligible_from|d }}</dd></div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="privacy-note">
+        <span class="icon" aria-hidden="true">🔒</span>
+        <span>Phone numbers, email addresses and exact addresses are never shown on donor profiles.</span>
+      </div>
+
+      <div class="callout">
+        <strong>No payments.</strong> BloodLink is a free community service. Never pay for blood — report anyone who asks for money.
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

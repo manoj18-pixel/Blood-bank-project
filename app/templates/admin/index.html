@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import status_badge %}
+
+{% block title %}Admin dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Administrator</span>
+      <h1>Platform overview</h1>
+      <p class="muted mb-0">Moderate accounts and requests, and keep an eye on community health.</p>
+    </div>
+    <div class="btn-row">
+      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.users') }}">Manage users</a>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('admin.requests') }}">Manage requests</a>
+    </div>
+  </div>
+
+  <div class="grid-3 mb-2">
+    <div class="stat"><div class="stat-value">{{ stats.users }}</div><div class="stat-label">Total accounts</div></div>
+    <div class="stat"><div class="stat-value">{{ stats.donors }}</div><div class="stat-label">Donors</div></div>
+    <div class="stat"><div class="stat-value">{{ stats.open_requests }}</div><div class="stat-label">Open requests</div></div>
+    <div class="stat"><div class="stat-value">{{ stats.matched_requests }}</div><div class="stat-label">Matched requests</div></div>
+    <div class="stat"><div class="stat-value">{{ stats.fulfilled }}</div><div class="stat-label">Fulfilled</div></div>
+    <div class="stat"><div class="stat-value">{{ stats.donations }}</div><div class="stat-label">Donations recorded</div></div>
+  </div>
+
+  <div class="split">
+    <div class="split-main stack">
+      <div class="card">
+        <div class="card-head"><h2>Newest accounts</h2><a class="small" href="{{ url_for('admin.users') }}">View all</a></div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>User</th><th>Group</th><th>City</th><th>Status</th><th>Joined</th></tr></thead>
+            <tbody>
+              {% for user in recent_users %}
+                <tr>
+                  <td>
+                    <strong>{{ user.full_name }}</strong>
+                    <div class="muted small">{{ user.email }}</div>
+                  </td>
+                  <td><span class="blood-pill">{{ user.blood_group }}</span></td>
+                  <td>{{ user.city }}</td>
+                  <td><span class="badge badge-{{ 'green' if user.status == 'active' else 'amber' }}">{{ user.status|title }}</span></td>
+                  <td class="muted small">{{ user.created_at|d }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Latest requests</h2><a class="small" href="{{ url_for('admin.requests') }}">View all</a></div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Patient</th><th>Group</th><th>City</th><th>Status</th><th>Posted</th></tr></thead>
+            <tbody>
+              {% for r in recent_requests %}
+                <tr>
+                  <td><a href="{{ url_for('requests.detail', request_id=r.id) }}">{{ r.patient_name }}</a></td>
+                  <td><span class="blood-pill">{{ r.blood_group }}</span></td>
+                  <td>{{ r.city }}</td>
+                  <td>{{ status_badge(r.status) }}</td>
+                  <td class="muted small">{{ r.created_at|timeago }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <aside class="split-side stack">
+      <div class="card">
+        <div class="card-head"><h2>Recent admin actions</h2></div>
+        <div class="card-body">
+          {% if recent_audit %}
+            <div class="notif-list">
+              {% for entry in recent_audit %}
+                <div class="notif">
+                  <span class="notif-dot read" aria-hidden="true"></span>
+                  <div class="notif-body">
+                    <div class="notif-title">{{ entry.action|replace("_", " ")|title }}</div>
+                    <div class="notif-text">{{ entry.target or "—" }}{% if entry.meta %} · {{ entry.meta }}{% endif %}</div>
+                    <div class="notif-time">{{ entry.created_at|dt }}</div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="muted small mb-0">No admin actions logged yet.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <strong>Reminder:</strong> only use admin powers for genuine moderation. Phone numbers and emails are personal data; do not share them.
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Access denied{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="empty" style="margin-top:3rem">
+    <div class="empty-icon" aria-hidden="true">🔒</div>
+    <h1>403 · Access denied</h1>
+    <p>You do not have permission to view this page or perform this action.</p>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('main.dashboard') if current_user.is_authenticated else url_for('main.index') }}">Go back</a>
+  </div>
+</div>
+{% endblock %}

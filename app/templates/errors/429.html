@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Too many requests{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="empty" style="margin-top:3rem">
+    <div class="empty-icon" aria-hidden="true">🐢</div>
+    <h1>429 · Slow down a moment</h1>
+    <p>Too many attempts. Please wait a little while and try again.</p>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('main.index') }}">Back home</a>
+  </div>
+</div>
+{% endblock %}

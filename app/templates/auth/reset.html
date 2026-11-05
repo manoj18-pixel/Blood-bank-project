@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import field %}
+
+{% block title %}Choose a new password{% endblock %}
+
+{% block content %}
+<div class="container auth-wrap">
+  <div class="auth-aside">
+    <span class="eyebrow">Account recovery</span>
+    <h1>Choose a new password.</h1>
+    <p class="muted">Use at least 8 characters with a letter and a number. This link can be used only once.</p>
+  </div>
+
+  <div class="card auth-card">
+    <h2>Set a new password</h2>
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.password) }}
+      {{ field(form.confirm_password) }}
+      <button class="btn btn-primary btn-block" type="submit">{{ form.submit.label.text }}</button>
+    </form>
+    <p class="auth-meta"><a href="{{ url_for('auth.login') }}">Back to sign in</a></p>
+  </div>
+</div>
+{% endblock %}

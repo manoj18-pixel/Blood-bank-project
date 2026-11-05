@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import field %}
+
+{% block title %}Create your account{% endblock %}
+
+{% block content %}
+<div class="container auth-wrap">
+  <div class="auth-aside">
+    <span class="eyebrow">Join the community</span>
+    <h1>One account. Two ways to help.</h1>
+    <p class="muted">Register with your email address, tell us your blood group, and become part of a trusted local donor network. Need blood? Post a request. Can give? Offer to help.</p>
+    <ul class="auth-points">
+      <li><span class="tick">✓</span><span>Find compatible donors by blood group, city and availability.</span></li>
+      <li><span class="tick">✓</span><span>Your phone number stays private until you accept an offer.</span></li>
+      <li><span class="tick">✓</span><span>Track requests, offers and donations in one dashboard.</span></li>
+      <li><span class="tick">✓</span><span>No payments. Blood is donated, never sold.</span></li>
+    </ul>
+  </div>
+
+  <div class="card auth-card">
+    <h2>Create your account</h2>
+    <p class="muted small">Already registered? <a href="{{ url_for('auth.login') }}">Sign in</a>.</p>
+
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ field(form.full_name) }}
+      {{ field(form.email, "We use this for sign-in, alerts and account recovery.") }}
+
+      <div class="form-grid">
+        {{ field(form.phone, "Shared only after you accept an offer on a request.") }}
+        {{ field(form.blood_group) }}
+        {{ field(form.city) }}
+        {{ field(form.area) }}
+        {{ field(form.pincode) }}
+      </div>
+
+      {{ field(form.password, "At least 8 characters, including a letter and a number.") }}
+      {{ field(form.confirm_password) }}
+
+      <button class="btn btn-primary btn-block" type="submit">{{ form.submit.label.text }}</button>
+      <p class="field-hint center mt-1">By joining, you agree to keep donor contact details private and to use the platform responsibly.</p>
+    </form>
+  </div>
+</div>
+{% endblock %}

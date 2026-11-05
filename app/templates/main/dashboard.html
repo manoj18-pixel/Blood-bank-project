@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% from "macros/forms.html" import status_badge, urgency_badge, empty_state %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-head">
+    <div>
+      <span class="eyebrow">Your dashboard</span>
+      <h1>Hi {{ current_user.full_name.split()[0] }}, good to see you.</h1>
+      <p class="muted mb-0">Here is what is happening with your requests and donations.</p>
+    </div>
+    <div class="btn-row">
+      <form method="post" action="{{ url_for('profile.toggle_availability') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn {{ 'btn-outline' if current_user.is_available else 'btn-primary' }} btn-sm" type="submit">
+          {{ '● Available to donate' if current_user.is_available else '○ Mark available' }}
+        </button>
+      </form>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('requests.new') }}">+ Need blood</a>
+    </div>
+  </div>
+
+  {% if current_user.is_donor and not eligible %}
+    <div class="callout callout-warning mb-2">
+      <strong>Donation status:</strong> {{ eligibility_label }}{% if current_user.eligible_from %} — eligible again on {{ current_user.eligible_from|d }}{% endif %}.
+    </div>
+  {% endif %}
+
+  <div class="grid-4 mb-2">
+    <div class="stat">
+      <div class="stat-value">{{ my_requests|length }}</div>
+      <div class="stat-label">Active requests</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ offers_received|length }}</div>
+      <div class="stat-label">New offers</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ current_user.donation_count }}</div>
+      <div class="stat-label">Donations</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ unread_notifications }}</div>
+      <div class="stat-label">Unread alerts</div>
+    </div>
+  </div>
+
+  <div class="split">
+    <div class="split-main stack">
+      <div class="card">
+        <div class="card-head">
+          <h2>My requests</h2>
+          <a class="btn btn-outline btn-sm" href="{{ url_for('requests.index') }}">Browse requests</a>
+        </div>
+        <div class="card-body">
+          {% if my_requests %}
+            <div class="request-list">
+              {% for r in my_requests %}
+                <a class="request-card" href="{{ url_for('requests.detail', request_id=r.id) }}">
+                  <span class="blood-pill">{{ r.blood_group }}</span>
+                  <div class="request-main">
+                    <div class="request-title">{{ r.patient_name }}</div>
+                    <div class="request-meta">
+                      <span>{{ r.hospital_name }}</span>
+                      <span>{{ r.city }}</span>
+                      <span>{{ r.needed_by|dt }}</span>
+                    </div>
+                    <div class="request-tags">
+                      {{ status_badge(r.status) }}
+                      {{ urgency_badge(r.urgency) }}
+                    </div>
+                  </div>
+                  <div class="request-side"><span class="btn btn-ghost btn-sm">Open</span></div>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            {{ empty_state("No active requests", "When someone needs blood, post a request here. Compatible donors nearby can offer to help.", url_for('requests.new'), "Post a request") }}
+          {% endif %}
+        </div>
+      </div>
+
+      {% if current_user.is_donor %}
+      <div class="card">
+        <div class="card-head">
+          <h2>Requests you can help with</h2>
+          <a class="small" href="{{ url_for('requests.index', mine='1') }}">See all compatible</a>
+        </div>
+        <div class="card-body">
+          {% if nearby_requests %}
+            <div class="request-list">
+              {% for item in nearby_requests %}
+                {% set r = item.request %}
+                <a class="request-card" href="{{ url_for('requests.detail', request_id=r.id) }}">
+                  <span class="blood-pill">{{ r.blood_group }}</span>
+                  <div class="request-main">
+                    <div class="request-title">{{ r.patient_name }} · {{ r.city }}</div>
+                    <div class="request-meta">
+                      <span>{{ r.hospital_name }}</span>
+                      <span>{{ r.needed_by|dt("%d %b, %I:%M %p") }}</span>
+                    </div>
+                    <div class="request-tags">
+                      {{ urgency_badge(r.urgency) }}
+                      {% if item.same_city %}<span class="badge badge-green">Your city</span>{% endif %}
+                    </div>
+                  </div>
+                  <div class="request-side"><span class="btn btn-ghost btn-sm">View</span></div>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            {{ empty_state("Nothing compatible right now", "There are no open requests that match your blood group and city. We will show them here as soon as they arrive.") }}
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Offers you sent</h2>
+        </div>
+        <div class="card-body">
+          {% if my_offers %}
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>Request</th><th>Status</th><th>Sent</th><th></th></tr></thead>
+                <tbody>
+                  {% for offer in my_offers %}
+                    <tr>
+                      <td>
+                        <strong>{{ offer.request.patient_name }}</strong>
+                        <div class="muted small">{{ offer.request.blood_group }} · {{ offer.request.city }}</div>
+                      </td>
+                      <td>{{ status_badge(offer.status) }}</td>
+                      <td class="muted small">{{ offer.created_at|timeago }}</td>
+                      <td class="text-right"><a class="btn btn-ghost btn-sm" href="{{ url_for('requests.detail', request_id=offer.request_id) }}">Open</a></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="muted small mb-0">You have not offered to donate yet. Browse compatible requests and press "I can help" when you are ready.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <aside class="split-side stack">
+      <div class="card card-accent">
+        <div class="card-body">
+          <h3>Donor eligibility</h3>
+          {% if current_user.is_donor %}
+            <p class="mb-1">
+              <span class="badge badge-{{ 'green' if eligible else 'amber' }}">{{ eligibility_label }}</span>
+            </p>
+            <div class="info-list">
+              <div class="info-row"><dt>Blood group</dt><dd>{{ current_user.blood_group }}</dd></div>
+              <div class="info-row"><dt>Last donation</dt><dd>{{ current_user.last_donation_date|d if current_user.last_donation_date else "Never recorded" }}</dd></div>
+              <div class="info-row"><dt>Next eligible</dt><dd>{{ current_user.eligible_from|d if current_user.eligible_from else "Now" }}</dd></div>
+              <div class="info-row"><dt>City</dt><dd>{{ current_user.city }}</dd></div>
+            </div>
+          {% else %}
+            <p class="muted small">You are registered as a requester. Enable "I want to donate blood" in your profile to appear in donor searches.</p>
+            <a class="btn btn-outline btn-sm" href="{{ url_for('profile.index') }}">Enable donor mode</a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Offers received</h2></div>
+        <div class="card-body">
+          {% if offers_received %}
+            {% for offer in offers_received %}
+              <div class="offer">
+                <div class="offer-head">
+                  <div class="offer-person">
+                    <span class="avatar">{{ offer.donor.initials }}</span>
+                    <div>
+                      <div class="donor-name">{{ offer.donor.full_name }}</div>
+                      <div class="muted small">{{ offer.donor.blood_group }} · {{ offer.donor.city }}</div>
+                    </div>
+                  </div>
+                  {{ status_badge(offer.status) }}
+                </div>
+                <div class="offer-actions">
+                  <a class="btn btn-outline btn-sm" href="{{ url_for('requests.detail', request_id=offer.request_id) }}">Review offer</a>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="muted small mb-0">No new offers yet. Donors will appear here when they respond to your requests.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Recent donations</h2></div>
+        <div class="card-body">
+          {% if my_donations %}
+            <div class="info-list">
+              {% for donation in my_donations %}
+                <div class="info-row">
+                  <dt>{{ donation.donated_on|d }}</dt>
+                  <dd>{{ donation.units }} unit{{ 's' if donation.units != 1 }}<br><span class="muted small">{{ donation.hospital_name or "Community donation" }}</span></dd>
+                </div>
+              {% endfor %}
+            </div>
+            <a class="btn btn-ghost btn-sm mt-2" href="{{ url_for('main.my_donations') }}">View all donations</a>
+          {% else %}
+            <p class="muted small mb-0">No donations recorded yet. After a donation, the requester marks the request fulfilled and it appears here.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="privacy-note">
+        <span class="icon" aria-hidden="true">🔒</span>
+        <span>Your phone number is visible only to a requester after you accept their request, and never on public pages.</span>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
