@@ -41,7 +41,7 @@ Close the terminal and open a new one so the `cloudflared` command is found.
 In one terminal:
 
 ```powershell
-cd "C:\Users\Manoj\OneDrive\Documents\Default Project"
+cd "C:\Users\Manoj\OneDrive\Desktop\BloodLink"
 .\.venv\Scripts\python.exe run.py
 ```
 
@@ -50,7 +50,7 @@ cd "C:\Users\Manoj\OneDrive\Documents\Default Project"
 In a **second** terminal:
 
 ```powershell
-cd "C:\Users\Manoj\OneDrive\Documents\Default Project"
+cd "C:\Users\Manoj\OneDrive\Desktop\BloodLink"
 .\share.ps1
 ```
 
@@ -87,7 +87,7 @@ Create an **empty** repository at <https://github.com/new> (do not add a README)
 then run:
 
 ```powershell
-cd "C:\Users\Manoj\OneDrive\Documents\Default Project"
+cd "C:\Users\Manoj\OneDrive\Desktop\BloodLink"
 git init
 git add .
 git commit -m "BloodLink ready for deployment"
@@ -174,7 +174,7 @@ Build** and **Artifact Registry** APIs.
 ### 2. Deploy straight from this folder
 
 ```powershell
-cd "C:\Users\Manoj\OneDrive\Documents\Default Project"
+cd "C:\Users\Manoj\OneDrive\Desktop\BloodLink"
 gcloud run deploy bloodlink --source . --region asia-south1 --allow-unauthenticated
 ```
 
