@@ -161,27 +161,9 @@ def create_app(config_name: str | None = None) -> Flask:
     @click.option("--name", prompt="Admin name", default="BloodLink Admin")
     def create_admin(email, password, name):  # pragma: no cover - CLI helper
         """Create (or promote) an administrator account."""
-        email = email.strip().lower()
-        user = User.query.filter_by(email=email).first()
-        if user:
-            user.role = "admin"
-            user.email_verified = True
-            user.status = "active"
-            user.set_password(password)
-        else:
-            user = User(
-                full_name=name,
-                email=email,
-                phone="0000000000",
-                blood_group="O+",
-                city="Pune",
-                is_donor=False,
-                email_verified=True,
-                role="admin",
-            )
-            user.set_password(password)
-            db.session.add(user)
-        db.session.commit()
-        click.echo(f"Admin ready: {email}")
+        from app.bootstrap import ensure_admin
+
+        user = ensure_admin(email, password, name)
+        click.echo(f"Admin ready: {user.email}")
 
     return app

@@ -239,6 +239,9 @@ Add these in **Project → Settings → Environment Variables** (Production):
 | `DATABASE_URL` | Neon/Vercel `postgresql://...` string (or rely on `POSTGRES_URL`) |
 | `SECRET_KEY` | long random string |
 | `FLASK_ENV` | `production` |
+| `ADMIN_EMAIL` | email for the administrator account |
+| `ADMIN_PASSWORD` | strong password for the administrator account |
+| `ADMIN_NAME` | optional display name (default `BloodLink Admin`) |
 
 Then open **Deployments → … → Redeploy** so the variables take effect.
 
@@ -249,8 +252,21 @@ Then open **Deployments → … → Redeploy** so the variables take effect.
 
 ### 3. Create the admin
 
-Vercel has no shell. Register a normal account on the site, then promote it in
-the Neon SQL editor:
+Vercel has no shell, so the entry point creates the administrator automatically
+on cold start from the environment variables:
+
+| Key | Value |
+|---|---|
+| `ADMIN_EMAIL` | `admin@your-domain.com` |
+| `ADMIN_PASSWORD` | a strong password |
+| `ADMIN_NAME` | optional display name |
+
+Redeploy after adding them, then sign in with those credentials. The password
+is only applied when the account is created; an existing account is simply
+promoted, so password changes made from the profile page are preserved.
+
+Alternatively, register a normal account on the site and promote it in the
+Neon SQL editor:
 
 ```sql
 UPDATE users SET role = 'admin', email_verified = true WHERE email = 'you@example.com';
