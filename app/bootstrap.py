@@ -13,6 +13,12 @@ import os
 from app.extensions import db
 from app.models import User
 
+# Built-in demo administrator. Used only when ADMIN_EMAIL / ADMIN_PASSWORD are
+# not configured. Change the password from the profile page after signing in.
+DEFAULT_ADMIN_EMAIL = "admin@bloodlink.local"
+DEFAULT_ADMIN_PASSWORD = "Bl-IE0AyZGh6-6lduxB!9"
+DEFAULT_ADMIN_NAME = "BloodLink Admin"
+
 
 def ensure_admin(email: str, password: str, full_name: str = "BloodLink Admin") -> User:
     """Create the admin account, or promote an existing account.
@@ -60,3 +66,12 @@ def ensure_admin_from_env() -> bool:
         os.environ.get("ADMIN_NAME", "BloodLink Admin"),
     )
     return True
+
+
+def ensure_default_admin() -> User:
+    """Create the built-in demo admin (used when env credentials are absent)."""
+    return ensure_admin(
+        DEFAULT_ADMIN_EMAIL,
+        DEFAULT_ADMIN_PASSWORD,
+        DEFAULT_ADMIN_NAME,
+    )

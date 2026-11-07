@@ -1,6 +1,12 @@
 """Admin bootstrap from environment variables (Vercel has no shell)."""
 
-from app.bootstrap import ensure_admin, ensure_admin_from_env
+from app.bootstrap import (
+    DEFAULT_ADMIN_EMAIL,
+    DEFAULT_ADMIN_PASSWORD,
+    ensure_admin,
+    ensure_admin_from_env,
+    ensure_default_admin,
+)
 from app.models import User
 
 
@@ -56,3 +62,12 @@ def test_is_idempotent(app, monkeypatch):
     ensure_admin_from_env()
 
     assert User.query.filter_by(email="admin@example.com").count() == 1
+
+
+def test_default_admin_is_created_when_env_is_absent(app):
+    user = ensure_default_admin()
+
+    assert user.email == DEFAULT_ADMIN_EMAIL
+    assert user.role == "admin"
+    assert user.email_verified is True
+    assert user.check_password(DEFAULT_ADMIN_PASSWORD)

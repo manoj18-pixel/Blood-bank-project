@@ -48,11 +48,12 @@ _prepare_database_url()
 # Imported after the environment is prepared because configuration is read at
 # import time in app/config.py.
 from app import create_app  # noqa: E402
-from app.bootstrap import ensure_admin_from_env  # noqa: E402
+from app.bootstrap import ensure_admin_from_env, ensure_default_admin  # noqa: E402
 from app.extensions import db  # noqa: E402
 
 app = create_app("production")
 
 with app.app_context():
     db.create_all()
-    ensure_admin_from_env()
+    if not ensure_admin_from_env():
+        ensure_default_admin()

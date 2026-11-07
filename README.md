@@ -18,7 +18,7 @@ Blood is **never bought or sold** on BloodLink. There are no payments, no middle
 - In-app notification inbox with unread counts.
 - Admin console for users, requests, verification, suspension and audit logging.
 - Responsive vanilla CSS design system, accessible markup and CSRF protection.
-- Automated pytest suite (124 tests) covering auth, matching, eligibility, requests, offers, privacy, notifications, admin, profile, security, admin bootstrap and deployment config.
+- Automated pytest suite (125 tests) covering auth, matching, eligibility, requests, offers, privacy, notifications, admin, profile, security, admin bootstrap and deployment config.
 
 ---
 
@@ -100,7 +100,7 @@ python -m pytest --cov=app --cov-report=term-missing
 
 The suite uses an in-memory SQLite database, so it never touches `instance/bloodlink.db`. CSRF and rate limiting are disabled **only** in the testing configuration.
 
-Latest local result: **124 passed**, 90% total coverage.
+Latest local result: **125 passed**, 90% total coverage.
 
 ### What is covered
 

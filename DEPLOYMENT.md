@@ -265,6 +265,17 @@ Redeploy after adding them, then sign in with those credentials. The password
 is only applied when the account is created; an existing account is simply
 promoted, so password changes made from the profile page are preserved.
 
+> **Default admin fallback.** If `ADMIN_EMAIL` / `ADMIN_PASSWORD` are not set,
+> the entry point creates a built-in demo administrator on cold start:
+>
+> | Field | Value |
+> |---|---|
+> | Email | `admin@bloodlink.local` |
+> | Password | `Bl-IE0AyZGh6-6lduxB!9` |
+>
+> This keeps the live demo usable, but the credentials are public. Sign in and
+> change the password from **Profile → Password** right after the first deploy.
+
 Alternatively, register a normal account on the site and promote it in the
 Neon SQL editor:
 
