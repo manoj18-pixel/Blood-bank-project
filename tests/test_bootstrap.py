@@ -26,7 +26,7 @@ def test_creates_admin_when_missing(app, monkeypatch):
     assert user.check_password("SuperSecret@123")
 
 
-def test_promotes_existing_user_without_resetting_password(app, make_user):
+def test_promotes_existing_user_and_resets_password(app, make_user):
     make_user(email="owner@example.com", password="Original@123")
 
     ensure_admin("owner@example.com", "Different@123")
@@ -34,8 +34,8 @@ def test_promotes_existing_user_without_resetting_password(app, make_user):
     user = User.query.filter_by(email="owner@example.com").one()
     assert user.role == "admin"
     assert user.email_verified is True
-    assert user.check_password("Original@123")
-    assert not user.check_password("Different@123")
+    assert user.check_password("Different@123")
+    assert not user.check_password("Original@123")
 
 
 def test_returns_false_without_env(app, monkeypatch):

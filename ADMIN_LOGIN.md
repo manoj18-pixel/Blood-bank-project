@@ -8,7 +8,7 @@ registration or SQL is required.
 | Field | Value |
 |---|---|
 | Email | `admin@bloodlink.local` |
-| Password | `Bl-IE0AyZGh6-6lduxB!9` |
+| Password | `adminmanoj@18` |
 | Name | `BloodLink Admin` |
 
 `index.py` calls `ensure_admin_from_env()` on cold start. If `ADMIN_EMAIL` and
@@ -29,12 +29,12 @@ Re-create the demo data any time with:
 .\.venv\Scripts\python.exe seed.py
 ```
 
-## After the first login
+## About changing the password
 
-Change the password from **Profile → Password**. The bootstrap only writes the
-password when it creates the account, so your new password is kept on later
-deployments. You can then remove `ADMIN_PASSWORD` from the Vercel environment
-variables.
+The bootstrap applies the configured password on every cold start, so the admin
+password is always the one in `ADMIN_PASSWORD` (or the built-in
+`adminmanoj@18` when the variable is absent). To use your own private password,
+set `ADMIN_PASSWORD` in Vercel and redeploy.
 
 ## Prefer your own credentials?
 

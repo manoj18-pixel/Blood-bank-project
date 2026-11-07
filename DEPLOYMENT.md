@@ -262,8 +262,8 @@ on cold start from the environment variables:
 | `ADMIN_NAME` | optional display name |
 
 Redeploy after adding them, then sign in with those credentials. The password
-is only applied when the account is created; an existing account is simply
-promoted, so password changes made from the profile page are preserved.
+is applied on every cold start, so changing `ADMIN_PASSWORD` and redeploying
+resets the admin password to the new value.
 
 > **Default admin fallback.** If `ADMIN_EMAIL` / `ADMIN_PASSWORD` are not set,
 > the entry point creates a built-in demo administrator on cold start:
@@ -271,10 +271,11 @@ promoted, so password changes made from the profile page are preserved.
 > | Field | Value |
 > |---|---|
 > | Email | `admin@bloodlink.local` |
-> | Password | `Bl-IE0AyZGh6-6lduxB!9` |
+> | Password | `adminmanoj@18` |
 >
-> This keeps the live demo usable, but the credentials are public. Sign in and
-> change the password from **Profile → Password** right after the first deploy.
+> This keeps the live demo usable, but the credentials are public. Change them
+> through `ADMIN_EMAIL` / `ADMIN_PASSWORD` environment variables for a private
+> site.
 
 Alternatively, register a normal account on the site and promote it in the
 Neon SQL editor:

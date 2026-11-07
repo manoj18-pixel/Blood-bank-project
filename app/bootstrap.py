@@ -16,16 +16,16 @@ from app.models import User
 # Built-in demo administrator. Used only when ADMIN_EMAIL / ADMIN_PASSWORD are
 # not configured. Change the password from the profile page after signing in.
 DEFAULT_ADMIN_EMAIL = "admin@bloodlink.local"
-DEFAULT_ADMIN_PASSWORD = "Bl-IE0AyZGh6-6lduxB!9"
+DEFAULT_ADMIN_PASSWORD = "adminmanoj@18"
 DEFAULT_ADMIN_NAME = "BloodLink Admin"
 
 
 def ensure_admin(email: str, password: str, full_name: str = "BloodLink Admin") -> User:
     """Create the admin account, or promote an existing account.
 
-    The password is only written when the account is created. Existing accounts
-    keep their current password so users can change it from the profile page
-    without it being reset on the next deployment.
+    The password is applied every time this runs, so changing
+    ``ADMIN_PASSWORD`` (or ``DEFAULT_ADMIN_PASSWORD``) and redeploying resets the
+    admin password to the configured value.
     """
     email = email.strip().lower()
     user = User.query.filter_by(email=email).first()
@@ -42,13 +42,13 @@ def ensure_admin(email: str, password: str, full_name: str = "BloodLink Admin") 
             role="admin",
             status="active",
         )
-        user.set_password(password)
         db.session.add(user)
     else:
         user.role = "admin"
         user.email_verified = True
         user.status = "active"
 
+    user.set_password(password)
     db.session.commit()
     return user
 
